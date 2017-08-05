@@ -1,0 +1,5 @@
+train_list: list_files/image_0/no_00_train.txt
+test_list: list_files/image_0/no_00_test.txt
+test_sequential: 0
+grid: (6,4)
+bins: 400

@@ -1,0 +1,17 @@
+net: "workspace/experiments/lstm_00.prototxt"
+test_iter: 27
+test_interval: 1000
+base_lr: 0.0001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10000
+display: 1
+max_iter: 500000
+momentum: 0.9
+weight_decay: 0.005  
+snapshot: 5000
+snapshot_prefix: "snapshots_ZF"
+snapshot_format: HDF5
+solver_mode: GPU
+device_id: 0 
+random_seed: 1701
