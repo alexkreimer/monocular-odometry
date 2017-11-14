@@ -14,6 +14,8 @@ from sklearn import preprocessing
 from scipy import stats
 import gzip
 
+import xgboost as xgb
+
 
 class LeafNode:
     def __init__(self):
@@ -69,7 +71,7 @@ def predict(clf, scaler, X, pairs, model):
         X_scaled = scaler.transform(X)
         return clf.predict(X_scaled)
     else:
-        return clf.predict(X)
+        return clf. predict(X)
 
 
 def fit_model(X, y, pairs, model):
@@ -153,8 +155,6 @@ if __name__ == '__main__':
     parser.add_argument('--rescale', action='store_true')
     args = parser.parse_args()
 
-    models = [('LRETR', LinearRegETR(), True),
-              ('ETR', ExtraTreesRegressor(), False)]
-    models = [('ETR', ExtraTreesRegressor(n_jobs=mp.cpu_count()*2), False)]
-    
+    # models = [('ETR', ExtraTreesRegressor(n_jobs=mp.cpu_count()*2), False)]
+    models = [('XGB', xgb.XGBRegressor(n_jobs=mp.cpu_count()*2), False)]
     fit_and_save(args.train_set, args.model_name, models, args.rescale)

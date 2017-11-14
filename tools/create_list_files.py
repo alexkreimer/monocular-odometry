@@ -28,6 +28,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', default='/data/other/')
     parser.add_argument('--out_dir', required=True)
+    parser.add_argument('--augment-same', action='store_true')
+    parser.add_argument('--augment-reverse', action='store_true')
+    parser.add_argument('--sha', default='')
+
     args = parser.parse_args()
     sequences = list(range(11))
     seq_dir = os.path.join(args.data_dir, 'dataset', 'sequences')
@@ -36,11 +40,11 @@ if __name__ == '__main__':
     scales = {s: read_scales(os.path.join(poses_dir, '%02d.txt' % s))
               for s in sequences}
 
-    for camera in [['image_0', 'image_1'], ['image_0'], ['image_1']]:
+    for camera in [['image_0'] ]:
         make_sure_path_exists(os.path.join(args.out_dir, '_'.join(camera)))
         for idx, test_seq in enumerate(sequences):
             train_seq = sequences[:idx] + sequences[idx+1:]
-            train_file_name = os.path.join(args.out_dir, '_'.join(camera), 'no_%02d.txt' % test_seq)
+            train_file_name = os.path.join(args.out_dir, '_'.join(camera), 'no_%02d_%s.txt' % (test_seq, args.sha))
             print 'train_file_name', train_file_name
             with open(train_file_name, 'w+') as fd:
                 for seq in train_seq:
@@ -50,8 +54,12 @@ if __name__ == '__main__':
                             name2 = os.path.join(seq_dir, '%02d' % seq, cam, '%06d.png' % (frame_no+1))
                             if os.path.exists(name1) and os.path.exists(name2):
                                 print >>fd, name1, name2, scales[seq][frame_no]
+                            if args.augment_same:
+                                print >>fd, name1, name1, 0.
+                            if args.augment_reverse:
+                                print >>fd, name2, name1, scales[seq][frame_no]
 
-            test_file_name = os.path.join(args.out_dir, '_'.join(camera), '%02d.txt' % test_seq)
+            test_file_name = os.path.join(args.out_dir, '_'.join(camera), '%02d_%s.txt' % (test_seq, args.sha))
             print 'test_file_name', test_file_name
             with open(test_file_name, 'w+') as fd:
                 for frame_no in range(len(scales[test_seq])):

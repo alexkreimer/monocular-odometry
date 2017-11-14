@@ -17,6 +17,7 @@ from progressbar import Percentage, Bar, ProgressBar
 import argparse
 import pandas as pd
 from tools.misc import make_sure_path_exists
+import itertools
 
 np.set_printoptions(precision=6)
 np.set_printoptions(suppress=True)
@@ -189,7 +190,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None,
                                      line))
 
 
-warnings.showwarning = warn_with_traceback
+# warnings.showwarning = warn_with_traceback
 
 
 def read_intrinsics(seq):
@@ -318,27 +319,31 @@ def load_images(pair):
 
 
 def main(config, workspace):
-    dataset = {}
-    for key in ('train_list', 'test_list'):
-        output_dir = os.path.join(workspace, 'output', config['name'],
-                                  'flow_features')
-        features_file = os.path.join(output_dir, '%s.pklz' % key)
-        if os.path.isfile(features_file):
-            dataset[key] = features_file
-            continue
-        df = pd.read_csv(os.path.join(workspace, config[key]),
-                         delim_whitespace=True, header=None)
-        image_list = df.loc[:, [0, 1]].values.tolist()
-        print('extracting corners')
-        corners = extract_match_corners_sequence(image_list)
-        print('compute features')
-        features = compute_features(corners, eval(config['grid']),
-                                    int(config['bins']))
-        make_sure_path_exists(output_dir)
-        with gzip.open(features_file, 'wb+') as fd:
-            pickle.dump({'features': features, 'meta': df.values.tolist()}, fd)
-        dataset[key] = features_file
-    return dataset
+    datasets = {}
+
+    output_dir = os.path.join(workspace, 'output', config['name'], 'features')
+    make_sure_path_exists(output_dir)    
+    for grid in itertools.product(config['grid_x'], config['grid_y']):
+        for bins in config['bins']:
+            dataset = {}            
+            for key in ('train_list', 'test_list'):
+                features_file = os.path.join(output_dir, '%s_%d_%d_%d.pklz' % (key, grid[0], grid[1], bins))
+                if os.path.isfile(features_file):
+                    dataset[key] = features_file
+                    datasets[(grid[0], grid[1], bins)] = dataset                    
+                    continue
+                df = pd.read_csv(os.path.join(workspace, config[key]),
+                                 delim_whitespace=True, header=None)
+                image_list = df.loc[:, [0, 1]].values.tolist()
+                print('extracting corners')
+                corners = extract_match_corners_sequence(image_list)
+                print('compute features')
+                features = compute_features(corners, grid, bins)
+                with gzip.open(features_file, 'wb+') as fd:
+                    pickle.dump({'features': features, 'meta': df.values.tolist()}, fd)
+                dataset[key] = features_file
+                datasets[(grid[0], grid[1], bins)] = dataset
+    return datasets
 
 
 if __name__ == '__main__':
