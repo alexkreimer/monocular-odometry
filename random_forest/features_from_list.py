@@ -328,10 +328,14 @@ def main(config, workspace):
             dataset = {}            
             for key in ('train_list', 'test_list'):
                 features_file = os.path.join(output_dir, '%s_%d_%d_%d.pklz' % (key, grid[0], grid[1], bins))
+                print('features_file', features_file)                
                 if os.path.isfile(features_file):
+                    print('found features file', features_file)
                     dataset[key] = features_file
                     datasets[(grid[0], grid[1], bins)] = dataset                    
                     continue
+                else:
+                    print('creating', features_file)
                 df = pd.read_csv(os.path.join(workspace, config[key]),
                                  delim_whitespace=True, header=None)
                 image_list = df.loc[:, [0, 1]].values.tolist()

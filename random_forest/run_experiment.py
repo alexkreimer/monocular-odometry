@@ -25,9 +25,12 @@ def load_config(experiment_file):
 
     for field in ['grid_x', 'grid_y', 'bins']:
         if field in config:
-            if ':' in config[field]:
-                begin, end, step = [int(val) for val in config[field].split(':')]
-                config[field] = list(range(begin, end, step))
+            try:
+                if ':' in config[field]:
+                    begin, end, step = [int(val) for val in config[field].split(':')]
+                    config[field] = list(range(begin, end, step))
+            except TypeError:
+                config[field] = [config[field]]
     return config
     
 if __name__ == '__main__':
@@ -44,6 +47,7 @@ if __name__ == '__main__':
     print(datasets)
     workers = mp.cpu_count()
 
+    print('fiting models...')
     Model = namedtuple('Model', 'tag, instance, needs_meta, rescale')
     models = [Model('ETR', fit.ExtraTreesRegressor2(n_jobs=workers, n_estimators=config['rf_size']), True, False),
               Model('XGB', xgb.XGBRegressor(n_jobs=mp.cpu_count()*2, max_depth=100, n_estimators=10000, silent=False, nrounds=10), False, False)
@@ -55,10 +59,12 @@ if __name__ == '__main__':
     make_sure_path_exists(result_dir)
 
     for key, dataset in datasets.items():
+        print('reading', dataset['train_list'])
         data = pickle.load(gzip.open(dataset['train_list'], 'rb'))
         X, meta = data['features'], data['meta']
         y = np.array([float(m[2]) for m in meta])
         pairs = [m[:2] for m in meta]
+        print('reading', dataset['test_list'])
         data_test = pickle.load(gzip.open(dataset['test_list'], 'rb'))
         X_test, meta_test = data_test['features'], data_test['meta']
         y_test = np.array([float(m[2]) for m in meta_test])
@@ -99,7 +105,7 @@ if __name__ == '__main__':
             #     leaf_nodes = clf.leaf_items([X_test[idx]])
             #     lf.append([ln.pairs for ln in leaf_nodes[0]])
 
-            df_test = pd.DataFrame({'y': y_test, 'y_pred': y_pred})
+            df = pd.DataFrame({'y': y_test, 'y_pred': y_pred})
             # 'y_error': np.abs(y_pred[sorted_errors] - y_test[sorted_errors]),
             # 'pairs': [pairs_test[idx] for idx in sorted_errors]})
             # leaf_pairs': lf})

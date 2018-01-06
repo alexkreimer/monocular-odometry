@@ -1,24 +1,24 @@
-name: "flow_rgb"
+name: "FlowNet"
 
 layer {
-  name: "data/labels"
+  name: "train_labels"
   type: "Data"
   top: "label"
   include { phase: TRAIN }  
   data_param {
-    source: "workspace/lmdb/labels_00_shuf_train"
+    source: "workspace/lmdb/labels_no_00_aug"
     backend: LMDB
     batch_size: 5
   }
 }
 
 layer {
-  name: "data"
+  name: "train_images"
   type: "Data"
   top: "data"
   include { phase: TRAIN }
   data_param {
-    source: "workspace/lmdb/images_00_shuf_train"
+    source: "workspace/lmdb/images_no_00_aug"
     backend: LMDB
     batch_size: 5
   }
@@ -34,28 +34,24 @@ layer {
 }
 
 layer {
-  name: "data/labels"
+  name: "test_labels"
   type: "Data"
   top: "label"
   include { phase: TEST }
   data_param {
-    source: "workspace/lmdb/labels_00_test"
+    source: "workspace/lmdb/labels_00"
     backend: LMDB
     batch_size: 5
-  }
-  include {
-    stage: "test_on_test"
   }
 }
 
 layer {
-  name: "data"
+  name: "test_images"
   type: "Data"
   top: "data"
   include { phase: TEST }
-  include { stage: "test_on_test" }  
   data_param {
-    source: "workspace/lmdb/images_00_test"
+    source: "workspace/lmdb/images_00"
     backend: LMDB
     batch_size: 5
   }
@@ -67,43 +63,6 @@ layer {
     mean_value: 91
     mean_value: 91
     scale: 0.0078125
-  }
-}
-
-layer {
-  name: "data/labels"
-  type: "Data"
-  top: "label"
-  include { phase: TEST }
-  include { stage: "test_on_train" }
-  data_param {
-    source: "workspace/lmdb/labels_no_00"
-    backend: LMDB
-    batch_size: 5
-  }
-}
-
-layer {
-  name: "data"
-  type: "Data"
-  top: "data"
-  include { phase: TEST }
-  data_param {
-    source: "workspace/lmdb/images_no_00"
-    backend: LMDB
-    batch_size: 5
-  }
-  transform_param {
-    mean_value: 91
-    mean_value: 91
-    mean_value: 91
-    mean_value: 91
-    mean_value: 91
-    mean_value: 91
-    scale: 0.0078125
-  }
-  include {
-    stage: "test_on_train"
   }
 }
 
@@ -321,7 +280,7 @@ layer {
 }
 
 layer {
-  name: "ReLU6"
+  name: "ReLU4_1"
   type: "ReLU"
   bottom: "conv4_1"
   top: "conv4_1"
